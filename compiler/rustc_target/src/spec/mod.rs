@@ -1713,6 +1713,7 @@ supported_targets! {
     ("riscv64gc-unknown-none-elf", riscv64gc_unknown_none_elf),
     ("riscv64gc-unknown-linux-gnu", riscv64gc_unknown_linux_gnu),
     ("riscv64gc-unknown-linux-musl", riscv64gc_unknown_linux_musl),
+    ("riscv64gc-unknown-riscovite", riscv64gc_unknown_riscovite),
 
     ("sparc-unknown-none-elf", sparc_unknown_none_elf),
 
