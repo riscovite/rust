@@ -1773,6 +1773,8 @@ supported_targets! {
     ("i686-unknown-redox", i686_unknown_redox),
     ("x86_64-unknown-redox", x86_64_unknown_redox),
 
+    ("riscv64gc-unknown-riscovite", riscv64gc_unknown_riscovite),
+
     ("i386-apple-ios", i386_apple_ios),
     ("x86_64-apple-ios", x86_64_apple_ios),
     ("aarch64-apple-ios", aarch64_apple_ios),
