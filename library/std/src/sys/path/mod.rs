@@ -2,6 +2,9 @@ cfg_if::cfg_if! {
     if #[cfg(target_os = "windows")] {
         mod windows;
         pub use windows::*;
+    } else if #[cfg(target_os = "riscovite")] {
+        mod riscovite;
+        pub use riscovite::*;
     } else if #[cfg(all(target_vendor = "fortanix", target_env = "sgx"))] {
         mod sgx;
         pub use sgx::*;

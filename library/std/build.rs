@@ -39,6 +39,7 @@ fn main() {
         || target_os == "hermit"
         || target_os == "l4re"
         || target_os == "redox"
+        || target_os == "riscovite"
         || target_os == "haiku"
         || target_os == "vxworks"
         || target_arch == "wasm32"

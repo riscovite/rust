@@ -315,6 +315,7 @@
 #![feature(strict_provenance_lints)]
 #![feature(thread_local)]
 #![feature(try_blocks)]
+#![feature(try_trait_v2)]
 #![feature(type_alias_impl_trait)]
 // tidy-alphabetical-end
 //

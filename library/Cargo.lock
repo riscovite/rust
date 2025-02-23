@@ -85,7 +85,7 @@ checksum = "d9b5e0d321d61de16390ed273b647ce51605b575916d3c25e6ddf27a1e140035"
 dependencies = [
  "cfg-if",
  "compiler_builtins",
- "libc",
+ "libc 0.2.169",
  "rustc-std-workspace-core",
  "windows-sys",
 ]
@@ -166,6 +166,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "libc"
+version = "0.2.170"
+source = "git+https://github.com/riscovite/rust-libc?rev=093d639164be689af9a6259ddd8340916ab4aa26#093d639164be689af9a6259ddd8340916ab4aa26"
+dependencies = [
+ "rustc-std-workspace-core",
+]
+
+[[package]]
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -207,7 +215,7 @@ dependencies = [
  "cfg-if",
  "compiler_builtins",
  "core",
- "libc",
+ "libc 0.2.169",
 ]
 
 [[package]]
@@ -218,7 +226,7 @@ dependencies = [
  "cfg-if",
  "compiler_builtins",
  "core",
- "libc",
+ "libc 0.2.169",
  "unwind",
 ]
 
@@ -332,7 +340,7 @@ dependencies = [
  "fortanix-sgx-abi",
  "hashbrown",
  "hermit-abi",
- "libc",
+ "libc 0.2.170",
  "miniz_oxide",
  "object",
  "panic_abort",
@@ -354,7 +362,7 @@ version = "0.1.5"
 dependencies = [
  "cfg-if",
  "compiler_builtins",
- "libc",
+ "libc 0.2.169",
  "rustc-std-workspace-alloc",
  "rustc-std-workspace-core",
 ]
@@ -375,7 +383,7 @@ version = "0.0.0"
 dependencies = [
  "core",
  "getopts",
- "libc",
+ "libc 0.2.169",
  "std",
 ]
 
@@ -397,7 +405,7 @@ dependencies = [
  "cfg-if",
  "compiler_builtins",
  "core",
- "libc",
+ "libc 0.2.169",
  "unwinding",
 ]
 

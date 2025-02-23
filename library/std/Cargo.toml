@@ -34,7 +34,7 @@ miniz_oxide = { version = "0.7.0", optional = true, default-features = false }
 addr2line = { version = "0.22.0", optional = true, default-features = false }
 
 [target.'cfg(not(all(windows, target_env = "msvc")))'.dependencies]
-libc = { version = "0.2.169", default-features = false, features = [
+libc = { git = "https://github.com/riscovite/rust-libc", version = "0.2.170", rev = "093d639164be689af9a6259ddd8340916ab4aa26", default-features = false, features = [
     'rustc-dep-of-std',
 ], public = true }
 
@@ -140,6 +140,7 @@ level = "warn"
 check-cfg = [
     'cfg(bootstrap)',
     'cfg(target_arch, values("xtensa"))',
+    'cfg(target_os, values("riscovite"))',
     # std use #[path] imports to portable-simd `std_float` crate
     # and to the `backtrace` crate which messes-up with Cargo list
     # of declared features, we therefor expect any feature cfg

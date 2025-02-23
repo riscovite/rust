@@ -52,6 +52,9 @@ cfg_if::cfg_if! {
     } else if #[cfg(target_os = "uefi")] {
         mod uefi;
         pub use self::uefi::*;
+    } else if #[cfg(target_os = "riscovite")] {
+        mod riscovite;
+        pub use self::riscovite::*;
     } else if #[cfg(all(target_vendor = "fortanix", target_env = "sgx"))] {
         mod sgx;
         pub use self::sgx::*;
@@ -76,5 +79,5 @@ cfg_if::cfg_if! {
     }
 }
 
-#[cfg(not(target_os = "uefi"))]
+#[cfg(not(any(target_os = "uefi", target_os = "riscovite")))]
 pub type RawOsError = i32;

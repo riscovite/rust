@@ -107,6 +107,10 @@ use crate::{cmp, fmt, fs, io, sys};
 /// `\\?\`), in which case `/` is *not* treated as a separator and essentially
 /// no normalization is performed.
 ///
+/// RISCovite also uses this type to represent the volume name prefix portion
+/// of its path syntax. On RISCovite only the DeviceNS variant is valid and
+/// it uses `NAME:` syntax instead of `\\.\NAME` syntax.
+///
 /// # Examples
 ///
 /// ```
@@ -192,6 +196,22 @@ impl<'a> Prefix<'a> {
         fn os_str_len(s: &OsStr) -> usize {
             s.as_encoded_bytes().len()
         }
+
+        // RISCovite borrows and slightly abuses this type to represent
+        // its "volume:" prefixes in its path syntax.
+        // FIXME: This ought to be handled by adapters under the "sys"
+        // module instead.
+        #[cfg(target_os="riscovite")]
+        match *self {
+            DeviceNS(x) => 1 + os_str_len(x), // name followed by colon
+            _ => 0, // No other variants are used on RISCovite
+        }
+
+        // The following is really only for Windows in practice, but it's
+        // implemented as "not RISCovite" here because before hacking the
+        // RISCovite support in here this had no target-specific rules
+        // at all.
+        #[cfg(not(target_os="riscovite"))]
         match *self {
             Verbatim(x) => 4 + os_str_len(x),
             VerbatimUNC(x, y) => {
@@ -1304,13 +1324,19 @@ impl PathBuf {
         let buf = self.inner.as_encoded_bytes();
         let mut need_sep = buf.last().map(|c| !is_sep_byte(*c)).unwrap_or(false);
 
-        // in the special case of `C:` on Windows, do *not* add a separator
         let comps = self.components();
 
+        // in the special case of `C:` on Windows, or `VOLUME:` on RISCovite,
+        // do *not* add a separator.
+        #[cfg(not(target_os="riscovite"))]
         if comps.prefix_len() > 0
             && comps.prefix_len() == comps.path.len()
             && comps.prefix.unwrap().is_drive()
         {
+            need_sep = false
+        }
+        #[cfg(target_os="riscovite")]
+        if buf.last().map(|c| *c == b':').unwrap_or(false) {
             need_sep = false
         }
 

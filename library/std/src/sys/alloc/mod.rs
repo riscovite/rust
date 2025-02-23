@@ -71,6 +71,7 @@ cfg_if::cfg_if! {
     if #[cfg(any(
         target_family = "unix",
         target_os = "wasi",
+        target_os = "riscovite", // not really Unix, but Unix enough for a libc allocator
         target_os = "teeos",
     ))] {
         mod unix;
