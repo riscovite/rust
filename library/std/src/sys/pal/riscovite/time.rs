@@ -1,5 +1,6 @@
+use super::syscall::defs::core::SYS_GET_CURRENT_TIMESTAMP;
+use super::syscall::syscall;
 use crate::time::Duration;
-use super::syscall::{syscall, defs::core::SYS_GET_CURRENT_TIMESTAMP};
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
 pub struct Instant(u64);

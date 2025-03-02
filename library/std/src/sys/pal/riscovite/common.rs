@@ -1,6 +1,5 @@
-use crate::io as std_io;
-
 use super::syscall::defs;
+use crate::io as std_io;
 
 // SAFETY: must be called only once during runtime initialization.
 // NOTE: this is not guaranteed to run, for example when Rust code is called externally.
@@ -24,6 +23,7 @@ pub fn is_interrupted(code: u64) -> bool {
 
 pub fn decode_error_kind(code: u64) -> crate::io::ErrorKind {
     use defs::errno;
+
     use crate::io::ErrorKind;
     match code {
         errno::ENOENT => ErrorKind::NotFound,

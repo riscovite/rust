@@ -291,6 +291,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "riscovite"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "769513aeeaea3178dbf2bc062bc6a90a09495ed38f9ebf7352e9ccc5f33ad936"
+dependencies = [
+ "compiler_builtins",
+ "rustc-std-workspace-core",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -349,6 +359,7 @@ dependencies = [
  "r-efi-alloc",
  "rand",
  "rand_xorshift",
+ "riscovite",
  "rustc-demangle",
  "std_detect",
  "unwind",

@@ -1,7 +1,7 @@
 use alloc::sync::Arc;
 use core::mem::MaybeUninit;
 
-use super::syscall::{defs, syscall};
+use super::syscall::{defs, ior, ior_map, syscall};
 use crate::ffi::OsString;
 use crate::fmt;
 use crate::hash::{Hash, Hasher};
@@ -171,7 +171,7 @@ impl Iterator for ReadDir {
     fn next(&mut self) -> Option<io::Result<DirEntry>> {
         if self.remain.is_empty() {
             // We'll try to fill our buffer with some more entries.
-            let result = unsafe {
+            let result = ior::<u64>(unsafe {
                 syscall!(
                     defs::io::SYS_READ_DIR,
                     self.shared.hnd_num,
@@ -179,8 +179,7 @@ impl Iterator for ReadDir {
                     self.buf.len() as u64,
                     0,
                 )
-                .as_io::<u64>()
-            };
+            });
             match result {
                 Ok(len) => {
                     self.remain = 0..(len as usize);
@@ -294,10 +293,9 @@ impl File {
     pub fn open(path: &Path, opts: &OpenOptions) -> io::Result<File> {
         let opts_raw = opts.for_syscall_arg();
         run_path_with_cstr(path, &|path| {
-            unsafe {
+            ior::<u64>(unsafe {
                 syscall!(defs::io::SYS_OPEN, defs::consts::HND_CWD, path.as_ptr() as u64, opts_raw)
-            }
-            .as_io::<u64>()
+            })
         })
         .map(|hnd_num| Self(hnd_num))
     }
@@ -308,7 +306,7 @@ impl File {
 
     #[inline]
     pub fn fsync(&self) -> io::Result<()> {
-        unsafe { syscall!(defs::io::SYS_SYNC, self.0,) }.as_io::<u64>().map(|_| ())
+        ior_map(unsafe { syscall!(defs::io::SYS_SYNC, self.0,) }, |_| ())
     }
 
     #[inline]
@@ -342,9 +340,9 @@ impl File {
 
     #[inline]
     unsafe fn read_raw(&self, ptr: *mut MaybeUninit<u8>, count: usize) -> io::Result<usize> {
-        unsafe { syscall!(defs::io::SYS_READ, self.0, ptr as u64, count as u64,) }
-            .as_io::<u64>()
-            .map(|n| n as usize)
+        ior_map(unsafe { syscall!(defs::io::SYS_READ, self.0, ptr as u64, count as u64,) }, |n| {
+            n as usize
+        })
     }
 
     #[inline]
@@ -369,9 +367,9 @@ impl File {
 
     #[inline]
     unsafe fn write_raw(&self, ptr: *const u8, count: usize) -> io::Result<usize> {
-        unsafe { syscall!(defs::io::SYS_WRITE, self.0, ptr as u64, count as u64,) }
-            .as_io::<u64>()
-            .map(|n| n as usize)
+        ior_map(unsafe { syscall!(defs::io::SYS_WRITE, self.0, ptr as u64, count as u64,) }, |n| {
+            n as usize
+        })
     }
 
     pub fn write(&self, buf: &[u8]) -> io::Result<usize> {
@@ -397,12 +395,12 @@ impl File {
             SeekFrom::End(n) => (defs::consts::SEEK_END, n as u64),
             SeekFrom::Current(n) => (defs::consts::SEEK_CUR, n as u64),
         };
-        unsafe { syscall!(defs::io::SYS_SEEK, self.0, offset, whence,) }.as_io::<u64>()
+        ior::<u64>(unsafe { syscall!(defs::io::SYS_SEEK, self.0, offset, whence) })
     }
 
     #[inline]
     pub fn duplicate(&self) -> io::Result<File> {
-        unsafe { syscall!(defs::io::SYS_DUP, self.0,) }.as_io::<u64>().map(|hn| Self(hn))
+        ior_map(unsafe { syscall!(defs::io::SYS_DUP, self.0,) }, |hn| Self(hn))
     }
 
     pub fn set_permissions(&self, _perm: FilePermissions) -> io::Result<()> {
@@ -433,15 +431,14 @@ impl fmt::Debug for File {
 pub fn readdir(p: &Path) -> io::Result<ReadDir> {
     let orig_path = p.to_owned();
     let hnd_num = run_path_with_cstr(p, &|path| {
-        unsafe {
+        ior::<u64>(unsafe {
             syscall!(
                 defs::io::SYS_OPEN,
                 defs::consts::HND_CWD,
                 path.as_ptr() as u64,
                 defs::consts::OPEN_DIR
             )
-        }
-        .as_io::<u64>()
+        })
     })?;
 
     Ok(ReadDir {
@@ -499,24 +496,20 @@ pub fn canonicalize(p: &Path) -> io::Result<PathBuf> {
     // For RISCovite we implement this by creating a temporary DOS node
     // handle and asking the system for its path.
     let hnd_num = run_path_with_cstr(p, &|path| {
-        unsafe {
+        ior::<u64>(unsafe {
             syscall!(
                 defs::io::SYS_TRAVERSE,
                 defs::consts::HND_CWD,
                 path.as_ptr() as u64,
                 0b01 // must exist, but does not need to be a directory
             )
-        }
-        .as_io::<u64>()
+        })
     })?;
     // After this point we must close hnd_num before we return, even if
     // we fail.
     let ret = super::os::dos_name_for_handle(hnd_num);
     unsafe {
-        syscall!(
-            defs::core::SYS_CLOSE,
-            hnd_num
-        );
+        syscall!(defs::core::SYS_CLOSE, hnd_num);
     };
     ret
 }

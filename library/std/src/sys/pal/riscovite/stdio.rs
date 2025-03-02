@@ -1,4 +1,4 @@
-use super::syscall::{syscall, defs};
+use super::syscall::{defs, ior_map, syscall};
 use crate::io;
 
 pub struct Stdin;
@@ -17,12 +17,12 @@ impl Stdin {
 impl io::Read for Stdin {
     #[inline]
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        unsafe { syscall!(
-            defs::io::SYS_READ,
-            Self::NUM,
-            buf.as_mut_ptr() as u64,
-            buf.len() as u64,
-        ) }.as_io::<u64>().map(|v| v as usize)
+        ior_map(
+            unsafe {
+                syscall!(defs::io::SYS_READ, Self::NUM, buf.as_mut_ptr() as u64, buf.len() as u64,)
+            },
+            |v| v as usize,
+        )
     }
 }
 
@@ -38,19 +38,17 @@ impl Stdout {
 impl io::Write for Stdout {
     #[inline]
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        unsafe { syscall!(
-            defs::io::SYS_WRITE,
-            Self::NUM,
-            buf.as_ptr() as u64,
-            buf.len() as u64,
-        ) }.as_io::<u64>().map(|v| v as usize)
+        ior_map(
+            unsafe {
+                syscall!(defs::io::SYS_WRITE, Self::NUM, buf.as_ptr() as u64, buf.len() as u64,)
+            },
+            |v| v as usize,
+        )
     }
 
     #[inline]
     fn flush(&mut self) -> io::Result<()> {
-        unsafe {
-            syscall!(defs::io::SYS_SYNC, Self::NUM)
-        }.as_io_map(|_| ())
+        ior_map(unsafe { syscall!(defs::io::SYS_SYNC, Self::NUM) }, |_| ())
     }
 }
 
@@ -66,19 +64,17 @@ impl Stderr {
 impl io::Write for Stderr {
     #[inline]
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        unsafe { syscall!(
-            defs::io::SYS_WRITE,
-            Self::NUM,
-            buf.as_ptr() as u64,
-            buf.len() as u64,
-        ) }.as_io::<u64>().map(|v| v as usize)
+        ior_map(
+            unsafe {
+                syscall!(defs::io::SYS_WRITE, Self::NUM, buf.as_ptr() as u64, buf.len() as u64,)
+            },
+            |v| v as usize,
+        )
     }
 
     #[inline]
     fn flush(&mut self) -> io::Result<()> {
-        unsafe {
-            syscall!(defs::io::SYS_SYNC, Self::NUM)
-        }.as_io_map(|_| ())
+        ior_map(unsafe { syscall!(defs::io::SYS_SYNC, Self::NUM) }, |_| ())
     }
 }
 

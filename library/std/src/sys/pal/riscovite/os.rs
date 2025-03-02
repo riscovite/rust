@@ -1,6 +1,6 @@
 use core::ffi::{CStr, c_char, c_int};
 
-use super::syscall::{defs, syscall};
+use super::syscall::{defs, ior, ior_map, syscall};
 use super::unsupported;
 use crate::error::Error as StdError;
 use crate::ffi::{OsStr, OsString};
@@ -44,10 +44,9 @@ pub(super) fn dos_name_for_handle(hnd_num: u64) -> io::Result<PathBuf> {
     let start_addr = loop {
         let ptr = buf.as_mut_ptr();
         let cap = buf.capacity();
-        let result = unsafe {
-            syscall!(defs::io::SYS_GET_DOS_PATH, hnd_num, ptr as u64, cap as u64)
-        };
-        if result.error.is(defs::Error::E2BIG) {
+        let result =
+            unsafe { syscall!(defs::io::SYS_GET_DOS_PATH, hnd_num, ptr as u64, cap as u64) };
+        if result.error.0 == (defs::Error::E2BIG as u64) {
             // Supervisor says that we need a bigger buffer, so we'll grow
             // our buffer and retry. The supervisor might have suggested
             // a specific buffer size to try in result.value.
@@ -70,7 +69,7 @@ pub(super) fn dos_name_for_handle(hnd_num: u64) -> io::Result<PathBuf> {
         // When successful, get_dos_path returns a pointer to a byte
         // _somewhere_ in the buffer that is the start of a null-terminated
         // string. It's not guaranteed to be at the start of the buffer.
-        break result.as_io::<u64>()?;
+        break ior::<u64>(result)?;
     };
 
     // If we get here then start_addr points to somewhere in buf and should
@@ -101,16 +100,17 @@ pub fn getcwd() -> io::Result<PathBuf> {
 #[inline]
 pub fn chdir(p: &path::Path) -> io::Result<()> {
     run_path_with_cstr(p, &|cp| {
-        unsafe {
-            syscall!(
-                defs::io::SYS_TRAVERSE_REPLACE,
-                defs::consts::HND_CWD,
-                cp.as_ptr() as u64,
-                0b11, // must exist, must be directory
-            )
-        }
-        .as_io::<u64>()
-        .map(|_| ())
+        ior_map(
+            unsafe {
+                syscall!(
+                    defs::io::SYS_TRAVERSE_REPLACE,
+                    defs::consts::HND_CWD,
+                    cp.as_ptr() as u64,
+                    0b11, // must exist, must be directory
+                )
+            },
+            |_| (),
+        )
     })
 }
 
